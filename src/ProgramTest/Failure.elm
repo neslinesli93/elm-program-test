@@ -23,8 +23,8 @@ type Failure
     | InvalidFlags String String
     | ProgramDoesNotSupportNavigation String
     | NoBaseUrl String String
-    | NoMatchingHttpRequest Int Int String { method : String, url : String } (List ( String, String ))
-    | MultipleMatchingHttpRequest Int Int String { method : String, url : String } (List ( String, String ))
+    | NoMatchingHttpRequest Int Int String { method : String, url : String, body : Maybe String } (List ( String, String, Maybe String ))
+    | MultipleMatchingHttpRequest Int Int String { method : String, url : String, body : Maybe String } (List ( String, String, Maybe String ))
     | EffectSimulationNotConfigured String
     | ViewAssertionFailed String (Html ()) ComplexQuery.Highlight ( ComplexQuery.FailureContext, ComplexQuery.Failure )
     | CustomFailure String String
@@ -80,6 +80,8 @@ toString failure =
                 , request.method
                 , " "
                 , request.url
+                , " "
+                , Maybe.withDefault "" request.body
                 , ") to have been made and still be pending, "
                 , case actual of
                     0 ->
@@ -96,7 +98,7 @@ toString failure =
                         String.concat
                             [ "    The following requests were made:\n"
                             , String.join "\n" <|
-                                List.map (\( method, url ) -> "      - " ++ method ++ " " ++ url) pendingRequests
+                                List.map (\( method, url, body ) -> "      - " ++ method ++ " " ++ url ++ " " ++ Maybe.withDefault "" body) pendingRequests
                             ]
                 ]
 
@@ -115,6 +117,8 @@ toString failure =
                 , request.method
                 , " "
                 , request.url
+                , " "
+                , Maybe.withDefault "" request.body
                 , ") to have been made, but "
                 , String.fromInt actual
                 , " such requests were made.\n"
@@ -126,7 +130,7 @@ toString failure =
                         String.concat
                             [ "    The following requests were made:\n"
                             , String.join "\n" <|
-                                List.map (\( method, url ) -> "      - " ++ method ++ " " ++ url) pendingRequests
+                                List.map (\( method, url, body ) -> "      - " ++ method ++ " " ++ url ++ " " ++ Maybe.withDefault "" body) pendingRequests
                             ]
                 , if expected == 1 && actual > 1 then
                     let

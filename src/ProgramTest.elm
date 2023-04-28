@@ -29,6 +29,7 @@ module ProgramTest exposing
     , fail, createFailed
     , getOutgoingPortValues
     , elmMajorVersionHack_4
+    , simulateGraphqlOk
     )
 
 {-| A `ProgramTest` simulates the execution of an Elm program
@@ -1520,7 +1521,7 @@ ensureHttpRequests method url checkRequests =
 checkSingleHttpRequest :
     (Test.Http.HttpRequest msg msg -> Expectation)
     -> List (Test.Http.HttpRequest msg msg)
-    -> Result (String -> { method : String, url : String } -> List ( String, String ) -> Failure) ()
+    -> Result (String -> { method : String, url : String, body : Maybe String } -> List ( String, String, Maybe String ) -> Failure) ()
 checkSingleHttpRequest checkRequest requests =
     case requests of
         [] ->
@@ -1542,7 +1543,7 @@ checkSingleHttpRequest checkRequest requests =
 checkMultipleHttpRequests :
     (List (Test.Http.HttpRequest msg msg) -> Expectation)
     -> List (Test.Http.HttpRequest msg msg)
-    -> Result (String -> { method : String, url : String } -> List ( String, String ) -> Failure) ()
+    -> Result (String -> { method : String, url : String, body : Maybe String } -> List ( String, String, Maybe String ) -> Failure) ()
 checkMultipleHttpRequests checkRequests requests =
     case Test.Runner.getFailureReason (checkRequests requests) of
         Nothing ->
@@ -1557,7 +1558,7 @@ expectHttpRequestHelper :
     String
     -> String
     -> String
-    -> (List (Test.Http.HttpRequest msg msg) -> Result (String -> { method : String, url : String } -> List ( String, String ) -> Failure) ())
+    -> (List (Test.Http.HttpRequest msg msg) -> Result (String -> { method : String, url : String, body : Maybe String } -> List ( String, String, Maybe String ) -> Failure) ())
     -> TestState model msg effect
     -> Result Failure (TestState model msg effect)
 expectHttpRequestHelper functionName method url checkRequests state =
@@ -1568,7 +1569,7 @@ expectHttpRequestHelper functionName method url checkRequests state =
         Just simulation ->
             checkRequests (MultiDict.get ( method, url ) simulation.state.http)
                 |> Result.map (\() -> state)
-                |> Result.mapError (\f -> f functionName { method = method, url = url } (MultiDict.keys simulation.state.http))
+                |> Result.mapError (\f -> f functionName { method = method, url = url, body = Nothing } (MultiDict.keys simulation.state.http |> List.map (\( a, b ) -> ( a, b, Nothing ))))
 
 
 {-| Simulates an HTTP 200 response to a pending request with the given method and url.
@@ -1674,16 +1675,81 @@ simulateHttpResponseHelper functionName method url pendingRequestIndex failIfMor
                     Err (EffectSimulationNotConfigured functionName)
 
                 Just simulation ->
-                    case
-                        MultiDict.get ( method, url ) simulation.state.http
-                            |> List.Extra.splitAt (pendingRequestIndex - 1)
-                    of
+                    let
+                        pendingRequests =
+                            MultiDict.keys simulation.state.http
+                                |> List.map (\( a, b ) -> ( a, b, Nothing ))
+
+                        requests =
+                            MultiDict.get ( method, url ) simulation.state.http
+                                |> List.Extra.splitAt (pendingRequestIndex - 1)
+                    in
+                    case requests of
                         ( prev, [] ) ->
-                            Err (NoMatchingHttpRequest pendingRequestIndex (List.length prev) functionName { method = method, url = url } (MultiDict.keys simulation.state.http))
+                            Err (NoMatchingHttpRequest pendingRequestIndex (List.length prev) functionName { method = method, url = url, body = Nothing } pendingRequests)
 
                         ( prev, actualRequest :: rest ) ->
                             if failIfMorePendingRequests && rest /= [] then
-                                Err (MultipleMatchingHttpRequest pendingRequestIndex (List.length prev + 1 + List.length rest) functionName { method = method, url = url } (MultiDict.keys simulation.state.http))
+                                Err (MultipleMatchingHttpRequest pendingRequestIndex (List.length prev + 1 + List.length rest) functionName { method = method, url = url, body = Nothing } pendingRequests)
+
+                            else
+                                let
+                                    resolveHttpRequest sim =
+                                        let
+                                            st =
+                                                sim.state
+                                        in
+                                        { sim | state = { st | http = MultiDict.set ( method, url ) (prev ++ rest) st.http } }
+                                in
+                                state
+                                    |> TestState.withSimulation
+                                        (resolveHttpRequest
+                                            >> EffectSimulation.queueTask (actualRequest.onRequestComplete response)
+                                        )
+                                    |> TestState.drain program
+
+
+simulateGraphqlOk : String -> String -> String -> String -> ProgramTest model msg effect -> ProgramTest model msg effect
+simulateGraphqlOk method url requestBody responseBody =
+    simulateGraphqlResponseHelper "simulateGraphqlOk"
+        method
+        url
+        requestBody
+        1
+        True
+        (Test.Http.httpResponse
+            { statusCode = 200
+            , body = responseBody
+            , headers = []
+            }
+        )
+
+
+simulateGraphqlResponseHelper : String -> String -> String -> String -> Int -> Bool -> Http.Response String -> ProgramTest model msg effect -> ProgramTest model msg effect
+simulateGraphqlResponseHelper functionName method url request pendingRequestIndex failIfMorePendingRequests response =
+    andThen <|
+        \program state ->
+            case state.effectSimulation of
+                Nothing ->
+                    Err (EffectSimulationNotConfigured functionName)
+
+                Just simulation ->
+                    let
+                        pendingRequests =
+                            MultiDict.keys simulation.state.graphql
+                                |> List.map (\( a, b, c ) -> ( a, b, Just c ))
+
+                        requests =
+                            MultiDict.get ( method, url, request ) simulation.state.graphql
+                                |> List.Extra.splitAt (pendingRequestIndex - 1)
+                    in
+                    case requests of
+                        ( prev, [] ) ->
+                            Err (NoMatchingHttpRequest pendingRequestIndex (List.length prev) functionName { method = method, url = url, body = Just request } pendingRequests)
+
+                        ( prev, actualRequest :: rest ) ->
+                            if failIfMorePendingRequests && rest /= [] then
+                                Err (MultipleMatchingHttpRequest pendingRequestIndex (List.length prev + 1 + List.length rest) functionName { method = method, url = url, body = Just request } pendingRequests)
 
                             else
                                 let
