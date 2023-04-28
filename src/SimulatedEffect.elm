@@ -23,6 +23,7 @@ type SimulatedTask x a
     = Succeed a
     | Fail x
     | HttpTask (HttpRequest x a)
+    | GraphqlTask (HttpRequest x a)
     | SleepTask Float (() -> SimulatedTask x a)
     | NowTask (Time.Posix -> SimulatedTask x a)
 

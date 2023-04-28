@@ -39,6 +39,7 @@ init f =
 
 type alias SimulationState msg =
     { http : MultiDict ( String, String ) (SimulatedEffect.HttpRequest msg msg)
+    , graphql : MultiDict ( String, String, String ) (SimulatedEffect.HttpRequest msg msg)
     , futureTasks : PairingHeap Int (() -> SimulatedTask msg msg)
     , nowMs : Int
     }
@@ -47,6 +48,7 @@ type alias SimulationState msg =
 emptySimulationState : SimulationState msg
 emptySimulationState =
     { http = MultiDict.empty
+    , graphql = MultiDict.empty
     , futureTasks = PairingHeap.empty
     , nowMs = 0
     }
@@ -94,6 +96,16 @@ simulateTask task simulationState =
                     MultiDict.insert ( request.method, request.url )
                         request
                         simulationState.http
+              }
+            , Nothing
+            )
+
+        SimulatedEffect.GraphqlTask request ->
+            ( { simulationState
+                | graphql =
+                    MultiDict.insert ( request.method, request.url, request.body )
+                        request
+                        simulationState.graphql
               }
             , Nothing
             )

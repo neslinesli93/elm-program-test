@@ -5,6 +5,7 @@ module SimulatedEffect.Http exposing
     , Expect, expectString, expectJson, expectWhatever, Error
     , expectStringResponse, Response
     , task, Resolver, stringResolver
+    , graphql
     )
 
 {-| This module parallels [elm/http's `Http` module](https://package.elm-lang.org/packages/elm/http/2.0.0/Http).
@@ -91,6 +92,26 @@ post r =
         }
 
 
+{-| Create a `Graphql` request.
+-}
+graphql :
+    { url : String
+    , body : Body
+    , expect : Expect msg
+    }
+    -> SimulatedEffect msg
+graphql r =
+    graphqlRequest
+        { method = "POST"
+        , headers = []
+        , url = r.url
+        , body = r.body
+        , expect = r.expect
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
 {-| Create a custom request.
 -}
 request :
@@ -109,6 +130,45 @@ request r =
             r.expect
     in
     SimulatedEffect.HttpTask
+        { method = r.method
+        , url = r.url
+        , headers =
+            case r.body of
+                EmptyBody ->
+                    r.headers
+
+                StringBody body ->
+                    header "Content-Type" body.contentType :: r.headers
+        , body =
+            case r.body of
+                EmptyBody ->
+                    ""
+
+                StringBody body ->
+                    body.content
+        , onRequestComplete = onResult >> SimulatedEffect.Succeed
+        }
+        |> SimulatedEffect.Task
+
+
+{-| Create a graphql request.
+-}
+graphqlRequest :
+    { method : String
+    , headers : List Header
+    , url : String
+    , body : Body
+    , expect : Expect msg
+    , timeout : Maybe Float
+    , tracker : Maybe String
+    }
+    -> SimulatedEffect msg
+graphqlRequest r =
+    let
+        (Expect onResult) =
+            r.expect
+    in
+    SimulatedEffect.GraphqlTask
         { method = r.method
         , url = r.url
         , headers =

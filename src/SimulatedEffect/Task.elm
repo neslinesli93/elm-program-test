@@ -77,6 +77,15 @@ andThen f task =
                 , onRequestComplete = request.onRequestComplete >> andThen f
                 }
 
+        SimulatedEffect.GraphqlTask request ->
+            SimulatedEffect.HttpTask
+                { method = request.method
+                , url = request.url
+                , body = request.body
+                , headers = request.headers
+                , onRequestComplete = request.onRequestComplete >> andThen f
+                }
+
         SimulatedEffect.SleepTask delay onResult ->
             SimulatedEffect.SleepTask delay (onResult >> andThen f)
 
@@ -218,6 +227,15 @@ mapError f task =
                 , onRequestComplete = request.onRequestComplete >> mapError f
                 }
 
+        SimulatedEffect.GraphqlTask request ->
+            SimulatedEffect.HttpTask
+                { method = request.method
+                , url = request.url
+                , body = request.body
+                , headers = request.headers
+                , onRequestComplete = request.onRequestComplete >> mapError f
+                }
+
         SimulatedEffect.SleepTask delay onResult ->
             SimulatedEffect.SleepTask delay (onResult >> mapError f)
 
@@ -237,6 +255,15 @@ onError f task =
             f x
 
         SimulatedEffect.HttpTask request ->
+            SimulatedEffect.HttpTask
+                { method = request.method
+                , url = request.url
+                , body = request.body
+                , headers = request.headers
+                , onRequestComplete = request.onRequestComplete >> onError f
+                }
+
+        SimulatedEffect.GraphqlTask request ->
             SimulatedEffect.HttpTask
                 { method = request.method
                 , url = request.url
