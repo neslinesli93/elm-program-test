@@ -6,7 +6,7 @@ import ProgramTest.EffectSimulation as EffectSimulation exposing (EffectSimulati
 import ProgramTest.Failure exposing (Failure(..))
 import ProgramTest.Program exposing (Program)
 import SimulatedEffect exposing (SimulatedEffect)
-import String.Extra
+import String.Extraa
 import Url exposing (Url)
 import Url.Extra
 
@@ -84,10 +84,10 @@ queueSimulatedEffect program effect state =
                         }
 
                 SimulatedEffect.PushUrl url ->
-                    urlChangeHelper ("simulating effect: SimulatedEffect.Navigation.pushUrl " ++ String.Extra.escape url) 0 url program state
+                    urlChangeHelper ("simulating effect: SimulatedEffect.Navigation.pushUrl " ++ String.Extraa.escape url) 0 url program state
 
                 SimulatedEffect.ReplaceUrl url ->
-                    urlChangeHelper ("simulating effect: SimulatedEffect.Navigation.replaceUrl " ++ String.Extra.escape url) 1 url program state
+                    urlChangeHelper ("simulating effect: SimulatedEffect.Navigation.replaceUrl " ++ String.Extraa.escape url) 1 url program state
 
                 SimulatedEffect.Back n ->
                     case state.navigation of

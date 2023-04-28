@@ -1,4 +1,4 @@
-module Result.Extra exposing (isOk)
+module Result.Extraa exposing (isOk)
 
 
 isOk : Result x a -> Bool

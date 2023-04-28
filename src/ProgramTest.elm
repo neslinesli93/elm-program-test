@@ -216,9 +216,9 @@ import ProgramTest.ComplexQuery as ComplexQuery exposing (ComplexQuery)
 import ProgramTest.EffectSimulation as EffectSimulation exposing (EffectSimulation)
 import ProgramTest.Failure as Failure exposing (Failure(..))
 import ProgramTest.Program as Program exposing (Program)
-import Result.Extra
+import Result.Extraa
 import SimulatedEffect exposing (SimulatedEffect, SimulatedSub, SimulatedTask)
-import String.Extra
+import String.Extraa
 import Test.Html.Event
 import Test.Html.Query as Query
 import Test.Html.Selector as Selector exposing (Selector)
@@ -762,7 +762,7 @@ simulateLabeledInputHelper functionDescription fieldId label allowTextArea addit
     in
     simulateComplexQuery functionDescription
         (ComplexQuery.exactlyOneOf
-            ("Expected one of the following to exist and have an " ++ String.Extra.escape ("on" ++ Tuple.first event) ++ " handler")
+            ("Expected one of the following to exist and have an " ++ String.Extraa.escape ("on" ++ Tuple.first event) ++ " handler")
             checks
         )
 
@@ -820,7 +820,7 @@ The parameters are:
 -}
 simulateDomEvent : (Query.Single msg -> Query.Single msg) -> ( String, Json.Encode.Value ) -> ProgramTest model msg effect -> ProgramTest model msg effect
 simulateDomEvent findTarget ( eventName, eventValue ) =
-    andThen (simulateHelper ("simulateDomEvent " ++ String.Extra.escape eventName) findTarget ( eventName, eventValue ))
+    andThen (simulateHelper ("simulateDomEvent " ++ String.Extraa.escape eventName) findTarget ( eventName, eventValue ))
 
 
 {-| Simulates clicking a button.
@@ -836,7 +836,7 @@ clickButton : String -> ProgramTest model msg effect -> ProgramTest model msg ef
 clickButton buttonText =
     let
         functionDescription =
-            "clickButton " ++ String.Extra.escape buttonText
+            "clickButton " ++ String.Extraa.escape buttonText
 
         checks : List ( String, ComplexQuery (Query.Single msg) -> ComplexQuery msg )
         checks =
@@ -1018,7 +1018,7 @@ clickLink : String -> String -> ProgramTest model msg effect -> ProgramTest mode
 clickLink linkText href =
     let
         functionDescription =
-            "clickLink " ++ String.Extra.escape linkText
+            "clickLink " ++ String.Extraa.escape linkText
 
         findLink =
             ComplexQuery.exactlyOneOf "Expected one of the following to exist"
@@ -1079,7 +1079,7 @@ clickLink linkText href =
             single
                 |> Test.Html.Event.simulate event
                 |> Test.Html.Event.toResult
-                |> Result.Extra.isOk
+                |> Result.Extraa.isOk
 
         tryClicking :
             { otherwise :
@@ -1171,7 +1171,7 @@ see [`simulateDomEvent`](#simulateDomEvent).
 -}
 fillIn : String -> String -> String -> ProgramTest model msg effect -> ProgramTest model msg effect
 fillIn fieldId label newContent programTest =
-    simulateLabeledInputHelper ("fillIn " ++ String.Extra.escape label)
+    simulateLabeledInputHelper ("fillIn " ++ String.Extraa.escape label)
         fieldId
         label
         True
@@ -1225,7 +1225,7 @@ see [`simulateDomEvent`](#simulateDomEvent).
 -}
 check : String -> String -> Bool -> ProgramTest model msg effect -> ProgramTest model msg effect
 check fieldId label willBecomeChecked programTest =
-    simulateLabeledInputHelper ("check " ++ String.Extra.escape label)
+    simulateLabeledInputHelper ("check " ++ String.Extraa.escape label)
         fieldId
         label
         False
@@ -1284,10 +1284,10 @@ selectOption fieldId label optionValue optionText =
         functionDescription =
             String.join " "
                 [ "selectOption"
-                , String.Extra.escape fieldId
-                , String.Extra.escape label
-                , String.Extra.escape optionValue
-                , String.Extra.escape optionText
+                , String.Extraa.escape fieldId
+                , String.Extraa.escape label
+                , String.Extraa.escape optionValue
+                , String.Extraa.escape optionText
                 ]
     in
     simulateComplexQuery functionDescription <|

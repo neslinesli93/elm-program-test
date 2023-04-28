@@ -4,7 +4,7 @@ import Html exposing (Html)
 import ProgramTest.ComplexQuery as ComplexQuery exposing (Failure(..), FailureContext1(..))
 import ProgramTest.TestHtmlHacks as TestHtmlHacks
 import Set
-import String.Extra
+import String.Extraa
 import Test.Html.Query as Query
 import Test.Runner.Failure
 import Url exposing (Url)
@@ -34,7 +34,7 @@ toString : Failure -> String
 toString failure =
     case failure of
         ChangedPage cause finalLocation ->
-            cause ++ " caused the program to end by navigating to " ++ String.Extra.escape (Url.toString finalLocation) ++ ".  NOTE: If this is what you intended, use ProgramTest.expectPageChange to end your test."
+            cause ++ " caused the program to end by navigating to " ++ String.Extraa.escape (Url.toString finalLocation) ++ ".  NOTE: If this is what you intended, use ProgramTest.expectPageChange to end your test."
 
         ExpectFailed expectationName description reason ->
             expectationName
@@ -54,7 +54,7 @@ toString failure =
             "simulateLastEffect failed: " ++ message
 
         InvalidLocationUrl functionName invalidUrl ->
-            functionName ++ ": " ++ "Not a valid absolute URL:\n" ++ String.Extra.escape invalidUrl
+            functionName ++ ": " ++ "Not a valid absolute URL:\n" ++ String.Extraa.escape invalidUrl
 
         InvalidFlags functionName message ->
             functionName ++ ":\n" ++ message
@@ -63,7 +63,7 @@ toString failure =
             functionName ++ ": Program does not support navigation.  Use ProgramTest.createApplication to create a ProgramTest that supports navigation."
 
         NoBaseUrl functionName relativeUrl ->
-            functionName ++ ": The ProgramTest does not have a base URL and cannot resolve the relative URL " ++ String.Extra.escape relativeUrl ++ ".  Use ProgramTest.withBaseUrl before calling ProgramTest.start to create a ProgramTest that can resolve relative URLs."
+            functionName ++ ": The ProgramTest does not have a base URL and cannot resolve the relative URL " ++ String.Extraa.escape relativeUrl ++ ".  Use ProgramTest.withBaseUrl before calling ProgramTest.start to create a ProgramTest that can resolve relative URLs."
 
         NoMatchingHttpRequest expected actual functionName request pendingRequests ->
             String.concat

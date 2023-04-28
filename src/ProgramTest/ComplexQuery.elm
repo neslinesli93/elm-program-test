@@ -3,7 +3,7 @@ module ProgramTest.ComplexQuery exposing (ComplexQuery, Failure(..), FailureCont
 import Json.Encode as Json
 import ProgramTest.TestHtmlHacks as TestHtmlHacks
 import ProgramTest.TestHtmlParser as TestHtmlParser
-import Result.Extra
+import Result.Extraa
 import Set exposing (Set)
 import Test.Html.Event
 import Test.Html.Query as Query
@@ -357,4 +357,4 @@ firstErrorOf source choices =
 
 countSuccesses : List (Result String String) -> Int
 countSuccesses results =
-    List.length (List.filter Result.Extra.isOk results)
+    List.length (List.filter Result.Extraa.isOk results)
